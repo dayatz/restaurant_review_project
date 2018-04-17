@@ -1,0 +1,15 @@
+.vscode/
+*pyc
+db.sqlite3
+**/migrations/**
+!**/migrations/__init__.py
+todo
+**/media/**
+**/media/**/**
+!media/git.keep
+*fuse_hidden**
+tags
+.idea/**
+*.log
+*.sublime-*
+
