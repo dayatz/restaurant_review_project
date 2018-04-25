@@ -40,6 +40,13 @@ INSTALLED_APPS = [
 
     'versatileimagefield',
     'rest_framework',
+    'rest_framework.authtoken',
+    'django_extensions',
+    # 'oauth2_provider',
+    # 'social_django',
+    # 'rest_framework_social_oauth2',
+    # 'social_django',
+    'rest_auth',
 
     'core',
 ]
@@ -73,6 +80,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'restaurant_review.wsgi.application'
+# AUTHENTICATION_BACKENDS = (
+#     'social_core.backends.facebook.facebookoauth2',
+#     'django.contrib.auth.backends.ModelBackend',
+# )
 
 
 # Database
@@ -83,7 +94,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'restaurant_review',
         'USER': 'restaurant_review',
-        'PASSWORD': 'restaurant_review123',
+        'PASSWORD': 'masuk123',
         'HOST': 'localhost',
         'PORT': 5432,
     }
@@ -130,4 +141,3 @@ STATIC_URL = '/s/'
 MEDIA_URL = '/m/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-

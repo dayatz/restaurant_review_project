@@ -1,5 +1,3 @@
-import os
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -8,12 +6,12 @@ from versatileimagefield.fields import VersatileImageField
 
 def upload_path(instance, filename):
     """ Generate upload location based on restaurant id """
-    return os.path.join('restaurant_%s' % instance.id, filename)
+    return 'restaurant_{0}/{1}'.format(instance.id, filename)
 
 
 def upload_path_review(instance, filename):
     """ Generate upload location to subdir based on restaurant id """
-    return os.path.join('restaurant_%s/review/' % instance.id, filename)
+    return 'restaurant_{0}/review/{1}'.format(instance.id, filename)
 
 
 class UserProfile(models.Model):
@@ -35,7 +33,7 @@ class Category(models.Model):
 
 
 class Restaurant(models.Model):
-    category = models.ManyToManyField(Category, blank=True, null=True)
+    category = models.ManyToManyField(Category)
     title = models.CharField(max_length=150)
     description = models.TextField()
     rate = models.FloatField(default=0)
@@ -47,6 +45,7 @@ class Restaurant(models.Model):
     location_lat = models.CharField(max_length=250, blank=True, null=True)
     location_lng = models.CharField(max_length=250, blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
     phone = models.CharField(max_length=30, blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
@@ -57,6 +56,8 @@ class Restaurant(models.Model):
 
 
 class RestaurantPhoto(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             null=True, blank=True)
     restaurant = models.ForeignKey(
         Restaurant, on_delete=models.CASCADE, related_name='photos')
     img = VersatileImageField(upload_to=upload_path)
@@ -66,8 +67,12 @@ class RestaurantPhoto(models.Model):
 
 
 class RestaurantMenu(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE,
+                                   related_name='menus')
     img = VersatileImageField(upload_to=upload_path)
+
+    def __str__(self):
+        return self.restaurant.title
 
 
 class RestaurantRating(models.Model):
