@@ -1,7 +1,10 @@
 from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 
 from versatileimagefield.fields import VersatileImageField
+from rest_framework.authtoken.models import Token
 
 
 def upload_path(instance, filename):
@@ -89,3 +92,9 @@ class RestaurantReview(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+
+@receiver(post_save, sender=User)
+def create_token(sender, instance, created, **kwargs):
+    if created:
+        Token.objects.create(user=instance)

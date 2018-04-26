@@ -1,7 +1,6 @@
 from django.urls import path, include
 
 from rest_framework_nested import routers
-from rest_framework.authtoken import views as auth_views
 from . import viewsets
 
 router = routers.DefaultRouter()
@@ -22,7 +21,7 @@ restaurant_router.register(
 
 urlpatterns = router.urls + restaurant_router.urls
 urlpatterns += (
-    path('auth/', auth_views.obtain_auth_token),
-    path('rest_auth/', include('rest_auth.urls'))
+    path('auth/', viewsets.AuthTokenView.as_view()),
+    path('auth/register/', viewsets.UserRegisterView.as_view()),
     # path('oauth2/', include('rest_framework_social_oauth2.urls'))
 )

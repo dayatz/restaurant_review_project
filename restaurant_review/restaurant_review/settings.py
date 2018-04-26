@@ -34,8 +34,8 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
+    # 'django.contrib.sessions',
+    # 'django.contrib.messages',
     'django.contrib.staticfiles',
 
     'versatileimagefield',
@@ -46,7 +46,10 @@ INSTALLED_APPS = [
     # 'social_django',
     # 'rest_framework_social_oauth2',
     # 'social_django',
-    'rest_auth',
+    # 'allauth',
+    # 'allauth.account',
+    # 'rest_auth',
+    # 'rest_auth.registration',
 
     'core',
 ]
