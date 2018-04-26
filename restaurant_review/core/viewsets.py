@@ -1,13 +1,14 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, authentication
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
+from rest_framework.decorators import action
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from rest_framework_social_oauth2.authentication import SocialAuthentication
-from . import serializers, models
+from . import serializers, models, permissions as custom_permissions
 
 
 class AuthTokenView(ObtainAuthToken):
@@ -43,8 +44,28 @@ class UserRegisterView(CreateAPIView):
 
 class RestaurantModelViewset(viewsets.ModelViewSet):
     serializer_class = serializers.RestaurantModelSerializer
+    authentication_classes = [authentication.TokenAuthentication]
     queryset = models.Restaurant.objects\
         .prefetch_related('category', 'menus', 'photos')
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    @action(
+        detail=True,
+        permission_classes=[custom_permissions.ReviewPermission],
+        authentication_classes=[authentication.TokenAuthentication],
+        methods=['POST'])
+    def rate(self, request, pk=None):
+        rating, created = models.RestaurantRating.objects.get_or_create(
+            restaurant_id=pk,
+            user=request.user
+        )
+        rating.rate = request.data.get('rate')
+        rating.save()
+        return Response({'status': 'success',
+                         'rate': request.data.get('rate'),
+                         'restaurant_rate': rating.restaurant.rate})
 
 
 class CategoryModelViewset(viewsets.ReadOnlyModelViewSet):
@@ -56,6 +77,8 @@ class CategoryModelViewset(viewsets.ReadOnlyModelViewSet):
 
 class RestaurantReviewModelViewset(viewsets.ModelViewSet):
     serializer_class = serializers.RestaurantReviewModelSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [custom_permissions.ReviewPermission]
 
     def get_queryset(self):
         return models.RestaurantReview.objects.filter(

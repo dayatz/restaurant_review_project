@@ -11,6 +11,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[UniqueValidator(queryset=User.objects.all())])
     password = serializers.CharField(min_length=8, write_only=True)
+    first_name = serializers.CharField
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -51,6 +52,12 @@ class RestaurantModelSerializer(serializers.ModelSerializer):
     category = CategoryModelSerailizer(many=True)
     menus = RestaurantMenuModelSerializer(read_only=True, many=True)
     photos = RestaurantPhotoModelSerializer(many=True, read_only=True)
+    rated = serializers.SerializerMethodField()
+
+    def get_rated(self, obj):
+        user = self.context.get('request').user
+        print(self.context.get('request').user)
+        return user.id in obj.rates.values_list('user', flat=True)
 
     class Meta:
         model = models.Restaurant

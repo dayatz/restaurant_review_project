@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User
@@ -79,15 +80,18 @@ class RestaurantMenu(models.Model):
 
 
 class RestaurantRating(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(
+        Restaurant, on_delete=models.CASCADE, related_name='rates')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rate = models.IntegerField()
+    rate = models.IntegerField(blank=True, null=True)
 
 
 class RestaurantReview(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(
+        Restaurant, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    img = VersatileImageField(upload_to=upload_path_review)
+    img = VersatileImageField(
+        upload_to=upload_path_review, blank=True, null=True)
     text = models.TextField()
 
     created = models.DateTimeField(auto_now_add=True)
@@ -98,3 +102,10 @@ class RestaurantReview(models.Model):
 def create_token(sender, instance, created, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+
+@receiver(post_save, sender=RestaurantRating)
+def save_rate_to_restaurant(sender, instance, *args, **kwargs):
+    restaurant = instance.restaurant
+    restaurant.rate = sender.objects.aggregate(s=Avg('rate'))['s']
+    restaurant.save()
