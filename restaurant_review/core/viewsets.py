@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from url_filter.integrations.drf import DjangoFilterBackend
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from rest_framework_social_oauth2.authentication import SocialAuthentication
@@ -49,6 +50,8 @@ class RestaurantModelViewset(viewsets.ModelViewSet):
     authentication_classes = [authentication.TokenAuthentication]
     queryset = models.Restaurant.objects\
         .prefetch_related('category', 'menus', 'photos')
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['title']
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -73,6 +76,32 @@ class RestaurantModelViewset(viewsets.ModelViewSet):
         return Response({'status': 'success',
                          'rate': request.data.get('rate'),
                          'restaurant_rate': rating.restaurant.rate})
+
+    @action(detail=False,
+            permission_classes=[
+                permissions.IsAuthenticated,
+                custom_permissions.ReviewPermission],
+            authentication_classes=[authentication.TokenAuthentication],
+            methods=['GET', 'POST'])
+    def bookmarks(self, request):
+        if request.POST:
+            restaurant_id = request.data.get('id')
+            if request.user.userprofile\
+                    .restaurant_bookmarks.filter(id=restaurant_id).exists():
+                request.user.userprofile\
+                    .restaurant_bookmarks.remove(restaurant_id)
+                status = 'removed'
+            else:
+                request.user.userprofile\
+                    .restaurant_bookmarks.add(restaurant_id)
+                status = 'added'
+            return Response({'status': status})
+
+        restaurants = request.user.userprofile.restaurant_bookmarks\
+            .prefetch_related('category', 'menus', 'photos')
+        serializer = serializers.RestaurantModelSerializer(
+            restaurants, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 class CategoryModelViewset(viewsets.ReadOnlyModelViewSet):
