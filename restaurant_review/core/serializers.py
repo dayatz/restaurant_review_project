@@ -52,12 +52,18 @@ class RestaurantModelSerializer(serializers.ModelSerializer):
     category = CategoryModelSerailizer(many=True)
     menus = RestaurantMenuModelSerializer(read_only=True, many=True)
     photos = RestaurantPhotoModelSerializer(many=True, read_only=True)
+    is_rated = serializers.SerializerMethodField()
     rated = serializers.SerializerMethodField()
 
-    def get_rated(self, obj):
+    def get_is_rated(self, obj):
         user = self.context.get('request').user
-        print(self.context.get('request').user)
         return user.id in obj.rates.values_list('user', flat=True)
+
+    def get_rated(self, obj):
+        if self.get_is_rated(obj):
+            user = self.context.get('request').user
+            return obj.rates.get(user=user).rate
+        return None
 
     class Meta:
         model = models.Restaurant
@@ -65,10 +71,13 @@ class RestaurantModelSerializer(serializers.ModelSerializer):
 
 
 class RestaurantReviewModelSerializer(serializers.ModelSerializer):
+    user = UserModelSerializer()
+
     class Meta:
         model = models.RestaurantReview
         fields = '__all__'
         extra_kwargs = {
             'user': {'required': False},
+            'img': {'required': False},
             'restaurant': {'required': False},
         }

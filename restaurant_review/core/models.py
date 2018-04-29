@@ -40,7 +40,7 @@ class Restaurant(models.Model):
     category = models.ManyToManyField(Category)
     title = models.CharField(max_length=150)
     description = models.TextField()
-    rate = models.FloatField(default=0)
+    rate = models.DecimalField(default=0, max_digits=3, decimal_places=1)
     img = VersatileImageField(upload_to=upload_path)
 
     open_time = models.TimeField(blank=True, null=True)

@@ -1,3 +1,5 @@
+# from django.views.decorators.cache import cache_page
+# from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, authentication
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
@@ -51,6 +53,11 @@ class RestaurantModelViewset(viewsets.ModelViewSet):
     def get_serializer_context(self):
         return {'request': self.request}
 
+    # @method_decorator(cache_page(60 * 60))
+    # def dispatch(self, request, *args, **kwargs):
+    #     return super(RestaurantModelViewset, self)\
+    #         .dispatch(request, *args, **kwargs)
+
     @action(
         detail=True,
         permission_classes=[custom_permissions.ReviewPermission],
@@ -81,7 +88,13 @@ class RestaurantReviewModelViewset(viewsets.ModelViewSet):
     permission_classes = [custom_permissions.ReviewPermission]
 
     def get_queryset(self):
-        return models.RestaurantReview.objects.filter(
+        return models.RestaurantReview.objects\
+            .select_related('user')\
+            .filter(restaurant_id=self.kwargs.get('restaurant_pk'))
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user=self.request.user,
             restaurant_id=self.kwargs.get('restaurant_pk'))
 
 
